@@ -5,18 +5,25 @@
  */
 package controller;
 
-import DAO.InterfaceDAO;
+import DAO.HibernateDAO;
 import DAO.SerieDAO;
+import Util.HibernateUtil;
 import Util.Util;
+import static controller.MenuController.menu;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javax.swing.JOptionPane;
@@ -42,11 +49,20 @@ public class IncluirController extends MenuController{
     private Button btnGravar;
     @FXML
     private Button btnImg;
-    InterfaceDAO dao = new SerieDAO();
+    HibernateDAO dao = new SerieDAO();
     private String imgg = "";
+    @FXML
+    private ImageView imgView;
+    @FXML
+    private ChoiceBox<Integer> assistidosChoice;
+    Serie serie=null;
+    
+    
+    
     @FXML
     private void gravar(ActionEvent event) {
         try {
+            
             String serie = txtSerie.getText();
             int temporadas = Integer.parseInt(txtTemporadas.getText());
             String emissora = txtEmissora.getText();
@@ -55,21 +71,35 @@ public class IncluirController extends MenuController{
             //String imagem = imgg;
             Serie c = new Serie(serie, temporadas, emissora, episodios, classificacao, false, imgg);
 
-            System.out.println("oloco");
+           
+            HibernateUtil.beginTransaction();
+            if(this.serie == null)
             dao.incluir(c);
+            else dao.editar(c);
+            HibernateUtil.commit();
+
             //apagarCamposGravacao();
             Util.fecharTela(btnGravar);
 
         } catch (Exception ex) {
+            HibernateUtil.rollback();
             JOptionPane.showMessageDialog(null, ex);
+            
            
-        }//adicionar tudo 
-        MenuController.menu.update();
-        System.out.println("nao");
+        }finally{
+                HibernateUtil.close();
+            }
+        //adicionar tudo 
+        
 
     }
     @FXML
     private void imagem(ActionEvent event) {
+        int x = Integer.parseInt(txtEpisodios.getText());
+        for(int i = 1; i<=x;i++){
+        assistidosChoice.getItems().addAll(i);
+        }
+        
 
         FileChooser fileChooser = new FileChooser();
 
@@ -93,6 +123,12 @@ public class IncluirController extends MenuController{
 
         // Image imageObject = new Image(imgg);
         //imgViewIncluir.setImage(imageObject);
+    }
+
+    void setSerie(Serie c) {
+        this.serie = c;
+        txtSerie.setText(this.serie.getSerie());
+    
     }
 
     

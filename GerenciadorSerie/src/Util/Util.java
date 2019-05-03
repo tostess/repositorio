@@ -5,7 +5,7 @@
  */
 package Util;
 
-import DAO.InterfaceDAO;
+import DAO.HibernateDAO;
 import DAO.SerieDAO;
 import java.awt.image.BufferedImage;
 import java.io.File;

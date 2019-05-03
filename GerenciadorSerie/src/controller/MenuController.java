@@ -5,8 +5,9 @@
  */
 package controller;
 
-import DAO.InterfaceDAO;
+import DAO.HibernateDAO;
 import DAO.SerieDAO;
+import Util.HibernateUtil;
 import Util.Util;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -68,7 +69,7 @@ public class MenuController implements Initializable {
     @FXML
     private ImageView imgView;
 
-    InterfaceDAO dao = new SerieDAO();
+    HibernateDAO dao = new SerieDAO();
     private TextField txtSerie;
     private TextField txtTemporadas;
     private TextField txtEmissora;
@@ -115,7 +116,7 @@ public class MenuController implements Initializable {
     void update() {
         try {
             tableView.getItems().setAll(dao.listar());
-            System.out.println("teste4");
+            System.out.println("teste5");
 
             //Image imageObject = new Image("/img/20180403121621_816.png");
             //imgView.setImage(imageObject);
@@ -150,9 +151,12 @@ public class MenuController implements Initializable {
         Serie c = (Serie) tableView.getSelectionModel().getSelectedItem();
         System.out.println(c.getImg());
 
-        Image imageObject = new Image(c.getImg());
+        if(c.temImg()){
+            Image imageObject = new Image(c.getImg());
+             imgView.setImage(imageObject);
+        }
 
-        imgView.setImage(imageObject);
+       
 
     }
 
@@ -167,11 +171,16 @@ public class MenuController implements Initializable {
         Optional<ButtonType> result = alert.showAndWait();
         if (result.get() == ButtonType.OK) {
             try {
-
-                dao.excluir(c);
+                
+            HibernateUtil.beginTransaction();
+            dao.excluir(c);
+            HibernateUtil.commit();
                 update();
             } catch (Exception ex) {
+                HibernateUtil.rollback();
                 System.out.println("Erro: " + ex);
+            }finally{
+                HibernateUtil.close();
             }
 
         }
@@ -186,7 +195,21 @@ public class MenuController implements Initializable {
 
     @FXML
     private void editar(ActionEvent event) {
-        chamarTela("/view/Editar.fxml");
+        Serie c = (Serie) tableView.getSelectionModel().getSelectedItem();
+        try {
+            FXMLLoader loader
+                    = new FXMLLoader(getClass().getResource("/view/Incluir.fxml"));
+            
+            Stage stage = new Stage();
+            stage.setScene(new Scene(loader.load()));
+            IncluirController controller = loader.getController();
+            controller.setSerie(c);
+            stage.show();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Erro: " + ex);
+        }
+       
     }
 
 }
